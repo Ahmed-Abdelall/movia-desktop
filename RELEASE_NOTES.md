@@ -12,5 +12,7 @@ Initial Windows release.
 - Added Android-compatible schema-v1 JSON import/export with validation and
   transactional merge/replace.
 
-The release executable, portable bundle, installer, and runtime screenshot were
-produced and verified on Windows 11.
+Download either the Windows installer or the portable ZIP.
+
+Windows may show a SmartScreen warning because this portfolio release is
+unsigned. Download only from the official GitHub Release.
