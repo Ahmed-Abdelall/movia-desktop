@@ -27,3 +27,10 @@ shared preferences because they are configuration, not event-domain data.
 The app starts with platform initialization only; database opening is lazy.
 Queries are indexed by the event primary key and sorted by ISO-8601 target time.
 There are no background services or network dependencies.
+
+Schema v2 adds `created_at` and `updated_at`; migration backfills legacy records
+without deleting data. The updater is an on-demand HTTPS client. The companion
+widget runs in a second Flutter window, registers the same plugins, and shares
+the AppData SQLite store.
+
+User data path: `%APPDATA%\Ahmed Abdelaal\Movia Desktop\movia.db`.

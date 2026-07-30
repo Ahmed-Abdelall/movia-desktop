@@ -25,6 +25,10 @@ Start Menu/Desktop shortcuts, and registers an uninstaller:
 iscc installer\movia-desktop.iss
 ```
 
+The stable installer AppId is `51ED7D03-BE63-4EEC-AD43-A91B0AF8D907`; do not
+change it between upgrades. Generate hashes only after the installer and
+portable ZIP are final.
+
 The portfolio release is intentionally unsigned. Windows SmartScreen may show a
 warning; download binaries only from the official GitHub Release.
 

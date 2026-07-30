@@ -2,6 +2,15 @@
 
 All notable changes to Movia Desktop are documented here.
 
+## 1.1.0 — 2026-07-30
+
+- Added creation/update timestamps and a non-destructive SQLite migration.
+- Added a persisted desktop widget with three styles.
+- Added secure GitHub Releases update checking and download progress.
+- Repaired back navigation and protected unsaved forms.
+- Added timeline groups, category identities, quick actions, and empty states.
+- Added a new Windows icon and in-place installer upgrade support.
+
 ## 1.0.0 — 2026-07-29
 
 - Initial independent Windows release.

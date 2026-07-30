@@ -1,18 +1,22 @@
-# Movia Desktop 1.0.0
+# Movia Desktop v1.1.0
 
-Initial Windows release.
+Movia 1.1.0 adds a movable, resizable desktop countdown companion with Compact,
+Countdown, and Upcoming styles. Widget position, size, selected event, opacity,
+theme, lock, and always-on-top preferences persist.
 
-- Added dashboard, live countdowns, upcoming events, and calendar.
-- Added create, edit, details, delete, archive, and restore workflows.
-- Added search, sorting, categories, context menus, and keyboard shortcuts.
-- Added responsive sidebar layout with minimum window sizing.
-- Added Material 3 light/dark/system modes.
-- Added English, Arabic, and RTL layout support.
-- Added local SQLite persistence.
-- Added Android-compatible schema-v1 JSON import/export with validation and
-  transactional merge/replace.
+Events now preserve localized creation and modification dates through SQLite and
+JSON. Existing v1.0.0 databases migrate in place without a reset. Navigation is
+predictable with visible Back actions, Escape, Alt+Left, and unsaved-form
+confirmation.
 
-Download either the Windows installer or the portable ZIP.
+The dashboard now groups events into Today, Tomorrow, This Week, This Month, and
+Later. Categories have icon-and-color identities, rows expose quick actions, and
+empty screens provide useful next steps.
 
-Windows may show a SmartScreen warning because this portfolio release is
-unsigned. Download only from the official GitHub Release.
+Settings includes a non-blocking GitHub Releases updater. Stable checks reject
+drafts and prereleases, select only the expected installer, and verify SHA-256
+when a checksum asset is available. The installer retains the v1.0.0 AppId for
+an in-place upgrade and user data remains in AppData.
+
+Movia remains unsigned, so Windows SmartScreen may show an unknown-publisher
+warning. No analytics, accounts, cloud service, or background service was added.

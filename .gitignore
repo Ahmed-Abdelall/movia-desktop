@@ -51,6 +51,7 @@ CMakeSettings.json
 out/
 
 # Generated release files
+release/
 release/*.exe
 release/*.msi
 release/*.msix

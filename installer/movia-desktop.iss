@@ -1,5 +1,5 @@
 #define MyAppName "Movia Desktop"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Ahmed Abdelaal"
 #define MyAppExeName "movia_desktop.exe"
 
@@ -11,13 +11,21 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\Movia
 DefaultGroupName=Movia Desktop
 OutputDir=..\release
-OutputBaseFilename=Movia-Desktop-Setup-1.0.0
+OutputBaseFilename=Movia-Desktop-Setup-1.1.0
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
+CloseApplications=yes
+RestartApplications=no
+UsePreviousAppDir=yes
+UsePreviousTasks=yes
+DisableProgramGroupPage=auto
+UninstallDisplayIcon={app}\{#MyAppExeName}
+VersionInfoVersion=1.1.0.2
+VersionInfoProductVersion=1.1.0.0
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -34,3 +42,24 @@ Name: "{autodesktop}\Movia Desktop"; Filename: "{app}\{#MyAppExeName}"; Tasks: d
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch Movia Desktop"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function IsDowngrade: Boolean;
+var
+  InstalledVersion: String;
+begin
+  Result := False;
+  if RegQueryStringValue(HKCU,
+    'Software\Microsoft\Windows\CurrentVersion\Uninstall\{51ED7D03-BE63-4EEC-AD43-A91B0AF8D907}_is1',
+    'DisplayVersion', InstalledVersion) then
+    Result := CompareStr(InstalledVersion, '{#MyAppVersion}') > 0;
+end;
+
+function InitializeSetup: Boolean;
+begin
+  Result := True;
+  if IsDowngrade then begin
+    MsgBox('A newer Movia Desktop version is already installed.', mbError, MB_OK);
+    Result := False;
+  end;
+end;

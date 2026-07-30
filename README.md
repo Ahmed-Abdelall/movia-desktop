@@ -3,6 +3,10 @@
 A bilingual countdown and moments desktop application for Windows, built with
 Flutter.
 
+![Movia icon](assets/branding/movia-icon-master.png)
+
+Current version: **1.1.0**
+
 Movia Desktop helps you organize important moments, events, deadlines, and
 countdowns in a focused Windows interface. It is an independent desktop project;
 all data stays on your computer.
@@ -11,6 +15,9 @@ all data stays on your computer.
 
 ## Features
 
+- Event creation and modification timestamps with safe schema migration
+- Compact, Countdown, and Upcoming desktop companion widget styles
+- Secure GitHub Releases update checks and SHA-256 verification
 - Dashboard and live countdown timers
 - Calendar view and event details
 - Add, edit, and delete events
@@ -22,6 +29,13 @@ all data stays on your computer.
 - Keyboard shortcuts and context menus
 - Responsive, resizable desktop interface
 - Android-compatible JSON import and export
+
+User data is stored outside the installation folder at
+`%APPDATA%\Ahmed Abdelaal\Movia Desktop\movia.db`.
+
+Keyboard navigation: `Escape` or `Alt+Left` goes back, `Ctrl+N` adds an event,
+`Ctrl+1` opens Dashboard, `Ctrl+2` Calendar, `Ctrl+3` Archive, and `Ctrl+,`
+opens Settings.
 
 ## Screenshots
 
