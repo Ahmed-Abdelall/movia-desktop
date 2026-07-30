@@ -117,6 +117,10 @@ class S {
     ],
     'downloadInstall': ['Download and install', 'تنزيل وتثبيت'],
     'viewRelease': ['View release on GitHub', 'عرض الإصدار على GitHub'],
+    'portableUpdateMessage': [
+      'Portable copy: download the new ZIP from GitHub, close Movia, and replace the portable folder manually.',
+      'نسخة محمولة: نزّل ملف ZIP الجديد من GitHub، وأغلق موفيا، ثم استبدل مجلد النسخة المحمولة يدوياً.',
+    ],
     'installUpdate': ['Install update', 'تثبيت التحديث'],
     'installConfirm': [
       'Movia will close and the installer will upgrade this installation. Your data remains in AppData.',

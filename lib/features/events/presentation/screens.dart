@@ -688,6 +688,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   UpdateResult result = const UpdateResult(UpdateStatus.idle);
   double progress = 0;
   bool cancelled = false;
+  bool installedBuild = false;
+  @override
+  void initState() {
+    super.initState();
+    isInstalledBuild().then((value) {
+      if (mounted) setState(() => installedBuild = value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider).value ?? const SettingsState();
@@ -831,16 +840,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (v) => _save(settings.copyWith(automaticUpdates: v)),
           ),
           Text(_updateMessage(context, result)),
+          if (!installedBuild)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(s(context).t('portableUpdateMessage')),
+            ),
           if (result.status == UpdateStatus.downloading)
             LinearProgressIndicator(value: progress),
           if (result.release != null)
             Wrap(
               spacing: 12,
               children: [
-                FilledButton(
-                  onPressed: () => _download(result.release!),
-                  child: Text(s(context).t('downloadInstall')),
-                ),
+                if (installedBuild)
+                  FilledButton(
+                    onPressed: () => _download(result.release!),
+                    child: Text(s(context).t('downloadInstall')),
+                  ),
                 TextButton(
                   onPressed: () =>
                       launchUrl(Uri.parse(result.release!.pageUrl)),

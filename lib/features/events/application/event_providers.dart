@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/event_repository.dart';
 import '../domain/event.dart';
+import '../../updates/update_service.dart';
 
 final repositoryProvider = Provider((_) => EventRepository());
 final eventsProvider =
@@ -140,7 +141,8 @@ class SettingsController extends AsyncNotifier<SettingsState> {
       widgetOpacity: prefs.getDouble('widgetOpacity') ?? .92,
       startWidgetWithMovia: prefs.getBool('startWidgetWithMovia') ?? false,
       startWithWindows: prefs.getBool('startWithWindows') ?? false,
-      automaticUpdates: prefs.getBool('automaticUpdates') ?? true,
+      automaticUpdates:
+          prefs.getBool('automaticUpdates') ?? await isInstalledBuild(),
       lastUpdateCheck: DateTime.tryParse(
         prefs.getString('lastUpdateCheck') ?? '',
       ),

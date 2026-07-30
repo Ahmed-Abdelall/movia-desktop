@@ -12,6 +12,23 @@ const latestReleaseUrl = '$repositoryUrl/releases/latest';
 const releasesApiUrl =
     'https://api.github.com/repos/Ahmed-Abdelall/movia-desktop/releases';
 
+Future<bool> isInstalledBuild() async {
+  if (!Platform.isWindows) return false;
+  final result = await Process.run('reg.exe', [
+    'query',
+    r'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{51ED7D03-BE63-4EEC-AD43-A91B0AF8D907}_is1',
+    '/v',
+    'InstallLocation',
+  ]);
+  if (result.exitCode != 0) return false;
+  final location = RegExp(
+    r'InstallLocation\s+REG_SZ\s+(.+)',
+  ).firstMatch(result.stdout.toString())?.group(1)?.trim();
+  if (location == null) return false;
+  final installedExe = p.normalize(p.join(location, 'movia_desktop.exe'));
+  return p.equals(p.normalize(Platform.resolvedExecutable), installedExe);
+}
+
 class SemanticVersion implements Comparable<SemanticVersion> {
   const SemanticVersion(this.major, this.minor, this.patch);
   final int major, minor, patch;
