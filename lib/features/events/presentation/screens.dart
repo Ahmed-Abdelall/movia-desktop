@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/localization/strings.dart';
+import '../../../core/design/movia_design.dart';
+import '../../../core/build_info.dart';
 import '../../updates/update_service.dart';
 import '../../widget/widget_window.dart';
 import '../application/event_providers.dart';
@@ -87,10 +89,59 @@ class _DashboardState extends ConsumerState<DashboardScreen> {
           final next = events
               .where((e) => e.targetInstant.isAfter(DateTime.now()))
               .firstOrNull;
+          final now = DateTime.now();
+          final greeting = now.hour < 12
+              ? 'Good morning'
+              : now.hour < 18
+              ? 'Good afternoon'
+              : 'Good evening';
+          final archived = all.where((e) => e.archived).length;
           return Padding(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
             child: Column(
               children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'مرحباً بك'
+                                : '$greeting, Ahmed',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'إليك ما تتطلع إليه.'
+                                : 'Here’s what you’re looking forward to.',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      DateFormat.yMMMMEEEEd(localeName(context)).format(now),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(width: 18),
+                    FilledButton.icon(
+                      onPressed: () => showEventEditor(context),
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(s(context).t('add')),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 54),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
@@ -105,7 +156,7 @@ class _DashboardState extends ConsumerState<DashboardScreen> {
                     const SizedBox(width: 12),
                     DropdownMenu<String>(
                       initialSelection: sort,
-                      width: 175,
+                      width: 190,
                       leadingIcon: const Icon(Icons.sort),
                       onSelected: (v) {
                         if (v != null) setState(() => sort = v);
@@ -118,24 +169,6 @@ class _DashboardState extends ConsumerState<DashboardScreen> {
                             ),
                           )
                           .toList(),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: WidgetWindowService.open,
-                      icon: const Icon(Icons.widgets_outlined),
-                      label: Text(s(context).t('openWidget')),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 56),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    FilledButton.icon(
-                      onPressed: () => showEventEditor(context),
-                      icon: const Icon(Icons.add),
-                      label: Text(s(context).t('add')),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 56),
-                      ),
                     ),
                   ],
                 ),
@@ -177,7 +210,17 @@ class _DashboardState extends ConsumerState<DashboardScreen> {
                           const SizedBox(width: 18),
                           SizedBox(
                             width: 340,
-                            child: CalendarPanel(events: events),
+                            child: Column(
+                              children: [
+                                Expanded(child: DesktopWidgetCard(event: next)),
+                                const SizedBox(height: 18),
+                                SummaryCard(
+                                  active: events.length,
+                                  archived: archived,
+                                  next: next,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       );
@@ -203,71 +246,247 @@ class CountdownPanel extends StatelessWidget {
       d.inMinutes.remainder(60),
       d.inSeconds.remainder(60),
     ];
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/event/${event.externalId}'),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                s(context).t('next'),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  EventIcon(event: event, size: 58),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          event.title,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(formatDate(context, event.targetInstant)),
-                        Text(
-                          '${s(context).t('created')} ${formatStamp(context, event.createdAt)}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6557E8), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x306557E8),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () => context.push('/event/${event.externalId}'),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s(context).t('next').toUpperCase(),
+                  style: const TextStyle(
+                    color: Color(0xFFDDE4FF),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
                   ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: List.generate(
-                  4,
-                  (i) => Expanded(
-                    child: Column(
-                      children: [
-                        Text(
-                          values[i].clamp(0, 999).toString().padLeft(2, '0'),
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          s(
-                            context,
-                          ).t(['days', 'hours', 'minutes', 'seconds'][i]),
-                        ),
-                      ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    EventIcon(event: event, size: 58),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.title,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                          ),
+                          Text(
+                            formatDate(context, event.targetInstant),
+                            style: const TextStyle(color: Color(0xFFE7EAFF)),
+                          ),
+                          Text(
+                            '${s(context).t('created')} ${formatStamp(context, event.createdAt)}',
+                            style: const TextStyle(
+                              color: Color(0xFFCDD5FF),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: List.generate(
+                    4,
+                    (i) => Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            values[i].clamp(0, 999).toString().padLeft(2, '0'),
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  fontSize: i == 0 ? 42 : 30,
+                                ),
+                          ),
+                          Text(
+                            s(
+                              context,
+                            ).t(['days', 'hours', 'minutes', 'seconds'][i]),
+                            style: const TextStyle(color: Color(0xFFDDE4FF)),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class DesktopWidgetCard extends StatelessWidget {
+  const DesktopWidgetCard({super.key, this.event});
+  final MoviaEvent? event;
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.widgets_outlined, color: MoviaDesign.purple),
+              const SizedBox(width: 10),
+              Text(
+                'Desktop Widget',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Keep your next moment visible while you work.',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF0E1426)
+                    : const Color(0xFFF0F1FF),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: MoviaDesign.purple.withValues(alpha: .2),
+                ),
+              ),
+              child: event == null
+                  ? const Center(child: Text('Add an event to preview'))
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.hourglass_bottom_rounded,
+                          color: MoviaDesign.purple,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          event!.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 17,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${event!.targetInstant.difference(DateTime.now()).inDays.clamp(0, 999)} DAYS TO GO',
+                          style: const TextStyle(
+                            color: MoviaDesign.purple,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: WidgetWindowService.open,
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: Text(s(context).t('openWidget')),
+                ),
+              ),
+              const SizedBox(width: 10),
+              IconButton.filledTonal(
+                onPressed: () => context.go('/settings'),
+                icon: const Icon(Icons.tune_rounded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class SummaryCard extends StatelessWidget {
+  const SummaryCard({
+    super.key,
+    required this.active,
+    required this.archived,
+    this.next,
+  });
+  final int active, archived;
+  final MoviaEvent? next;
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _summary(context, '$active', 'Active'),
+          _summary(context, '$archived', 'Archived'),
+          _summary(
+            context,
+            next == null
+                ? '—'
+                : DateFormat.MMMd(
+                    localeName(context),
+                  ).format(next!.targetInstant),
+            'Next event',
+          ),
+        ],
+      ),
+    ),
+  );
+  Widget _summary(BuildContext c, String value, String label) => Column(
+    children: [
+      Text(
+        value,
+        style: Theme.of(
+          c,
+        ).textTheme.titleLarge?.copyWith(color: MoviaDesign.purple),
+      ),
+      const SizedBox(height: 3),
+      Text(label, style: Theme.of(c).textTheme.bodySmall),
+    ],
+  );
 }
 
 class EventTimeline extends StatelessWidget {
@@ -886,7 +1105,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.hourglass_bottom_rounded),
             title: Text('Movia Desktop'),
-            subtitle: Text('Version 1.1.0 • MIT License'),
+            subtitle: Text(
+              'Version ${BuildInfo.version} • ${BuildInfo.type}\nCommit ${BuildInfo.shortCommit}\nBuilt ${BuildInfo.timestamp}',
+            ),
           ),
           TextButton(
             onPressed: () => launchUrl(Uri.parse(repositoryUrl)),

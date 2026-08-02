@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 import 'core/localization/strings.dart';
+import 'core/design/movia_design.dart';
 import 'features/events/application/event_providers.dart';
 import 'features/events/presentation/screens.dart';
 import 'features/updates/update_service.dart';
@@ -78,29 +79,6 @@ class _MoviaAppState extends ConsumerState<MoviaApp> {
       AppThemeMode.dark => ThemeMode.dark,
       _ => ThemeMode.system,
     };
-    final lightScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF312E81),
-      brightness: Brightness.light,
-    );
-    final darkScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF818CF8),
-      brightness: Brightness.dark,
-    );
-    ThemeData makeTheme(ColorScheme scheme) => ThemeData(
-      useMaterial3: true,
-      colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: scheme.outlineVariant),
-        ),
-      ),
-    );
     final locale = switch (settings.language) {
       'en' => const Locale('en'),
       'ar' => const Locale('ar'),
@@ -110,8 +88,8 @@ class _MoviaAppState extends ConsumerState<MoviaApp> {
       title: 'Movia',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: makeTheme(lightScheme),
-      darkTheme: makeTheme(darkScheme),
+      theme: MoviaDesign.theme(Brightness.light),
+      darkTheme: MoviaDesign.theme(Brightness.dark),
       themeMode: themeMode,
       locale: locale,
       supportedLocales: const [Locale('en'), Locale('ar')],
@@ -157,12 +135,15 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('dashboard', Icons.dashboard_outlined, '/dashboard'),
+      ('overview', Icons.grid_view_rounded, '/dashboard'),
       ('calendar', Icons.calendar_month_outlined, '/calendar'),
+      ('events', Icons.event_note_outlined, '/dashboard'),
       ('archive', Icons.inventory_2_outlined, '/archive'),
       ('settings', Icons.settings_outlined, '/settings'),
     ];
-    final selected = items.indexWhere((e) => location.startsWith(e.$3));
+    final selected = location.startsWith('/event')
+        ? 2
+        : items.indexWhere((e) => location.startsWith(e.$3));
     return Shortcuts(
       shortcuts: {
         const SingleActivator(LogicalKeyboardKey.digit1, control: true):
@@ -213,10 +194,23 @@ class AppShell extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(24, 28, 24, 30),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.hourglass_bottom_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 30,
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    MoviaDesign.purple,
+                                    MoviaDesign.blue,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.hourglass_bottom_rounded,
+                                color: Colors.white,
+                                size: 23,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             const Text(
@@ -240,10 +234,18 @@ class AppShell extends StatelessWidget {
                             selected: selected == i,
                             leading: Icon(item.$2),
                             title: Text(s(context).t(item.$1)),
-                            trailing: Text(
-                              i < 3 ? 'Ctrl+${i + 1}' : 'Ctrl+,',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
+                            trailing: i == 2
+                                ? null
+                                : Text(
+                                    i < 2
+                                        ? 'Ctrl+${i + 1}'
+                                        : i == 4
+                                        ? 'Ctrl+,'
+                                        : '',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
+                                  ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -255,7 +257,7 @@ class AppShell extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.all(20),
                         child: Text(
-                          'Movia 1.1.0\nWindows',
+                          'Movia 1.2.0  •  Windows\nData stored securely on this PC',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 — 2026-08-02
+
+- Redesigned the desktop shell and Overview with Movia's purple/blue visual system.
+- Added build provenance to About and clean, staged release packaging.
+- Hardened Windows installer identity, icon metadata, and stale-output prevention.
+
 All notable changes to Movia Desktop are documented here.
 
 ## 1.1.0 — 2026-07-30

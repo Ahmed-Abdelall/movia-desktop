@@ -70,14 +70,14 @@ void main() {
         (_) async => http.Response(
           jsonEncode([
             release(tag: 'v2.0.0', draft: true),
-            release(tag: 'v1.2.0'),
+            release(tag: 'v1.3.0'),
           ]),
           200,
         ),
       );
       final result = await UpdateService(client: client).check();
       expect(result.status, UpdateStatus.available);
-      expect(result.release!.version.toString(), '1.2.0');
+      expect(result.release!.version.toString(), '1.3.0');
     },
   );
   test('checker handles HTTP and malformed JSON failures', () async {

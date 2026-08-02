@@ -19,6 +19,20 @@ Future<void> main(List<String> args) async {
     return;
   }
   await windowManager.ensureInitialized();
+  unawaited(
+    windowManager.waitUntilReadyToShow(
+      const WindowOptions(
+        size: Size(1280, 800),
+        minimumSize: Size(1000, 680),
+        center: true,
+        title: 'Movia',
+      ),
+      () async {
+        await windowManager.show();
+        await windowManager.focus();
+      },
+    ),
+  );
   await controller.setWindowMethodHandler(handleMainWindowMessage);
   runApp(const ProviderScope(child: MoviaApp()));
   if ((await SharedPreferences.getInstance()).getBool('startWidgetWithMovia') ==

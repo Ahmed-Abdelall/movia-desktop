@@ -1,5 +1,5 @@
 #define MyAppName "Movia Desktop"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.2.0"
 #define MyAppPublisher "Ahmed Abdelaal"
 #define MyAppExeName "movia_desktop.exe"
 
@@ -11,7 +11,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\Movia
 DefaultGroupName=Movia Desktop
 OutputDir=..\release
-OutputBaseFilename=Movia-Desktop-Setup-1.1.0
+OutputBaseFilename=Movia-Desktop-Setup-1.2.0-rc
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -24,8 +24,12 @@ UsePreviousAppDir=yes
 UsePreviousTasks=yes
 DisableProgramGroupPage=auto
 UninstallDisplayIcon={app}\{#MyAppExeName}
-VersionInfoVersion=1.1.0.2
-VersionInfoProductVersion=1.1.0.0
+VersionInfoVersion=1.2.0.3
+VersionInfoProductVersion=1.2.0.0
+SetupIconFile=..\windows\runner\resources\app_icon.ico
+UninstallDisplayName=Movia Desktop
+ChangesAssociations=no
+CloseApplicationsFilter=movia_desktop.exe
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -34,7 +38,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"
 
 [Files]
-Source: "..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\staging\windows-release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\Movia Desktop"; Filename: "{app}\{#MyAppExeName}"

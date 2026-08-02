@@ -1,6 +1,6 @@
-# Movia Desktop v1.1.0
+# Movia Desktop v1.2.0
 
-Movia 1.1.0 adds a movable, resizable desktop countdown companion with Compact,
+Movia 1.2.0 adds a redesigned premium Overview and a movable, resizable desktop countdown companion with Compact,
 Countdown, and Upcoming styles. Widget position, size, selected event, opacity,
 theme, lock, and always-on-top preferences persist.
 

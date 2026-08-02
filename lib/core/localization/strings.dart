@@ -6,13 +6,15 @@ class S {
   bool get ar => locale.languageCode == 'ar';
   String t(String key) => (_values[key] ?? const ['', ''])[ar ? 1 : 0];
   static const _values = <String, List<String>>{
+    'overview': ['Overview', 'نظرة عامة'],
+    'events': ['Events', 'المناسبات'],
     'dashboard': ['Dashboard', 'لوحة التحكم'],
     'calendar': ['Calendar', 'التقويم'],
     'archive': ['Archive', 'الأرشيف'],
     'settings': ['Settings', 'الإعدادات'],
     'search': ['Search events', 'بحث في المناسبات'],
     'add': ['Add event', 'إضافة مناسبة'],
-    'upcoming': ['Upcoming events', 'المناسبات القادمة'],
+    'upcoming': ['Upcoming Moments', 'المناسبات القادمة'],
     'next': ['Next up', 'المناسبة التالية'],
     'empty': ['No events yet', 'لا توجد مناسبات بعد'],
     'title': ['Title', 'العنوان'],
@@ -62,7 +64,6 @@ class S {
       'Delete this event permanently?',
       'حذف هذه المناسبة نهائياً؟',
     ],
-    'events': ['events', 'مناسبات'],
     'noArchived': ['No archived events', 'لا توجد مناسبات مؤرشفة'],
     'birthday': ['Birthday', 'عيد ميلاد'],
     'education': ['Education', 'تعليم'],

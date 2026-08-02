@@ -5,7 +5,7 @@ Flutter.
 
 ![Movia icon](assets/branding/movia-icon-master.png)
 
-Current version: **1.1.0**
+Current version: **1.2.0**
 
 Movia Desktop helps you organize important moments, events, deadlines, and
 countdowns in a focused Windows interface. It is an independent desktop project;
