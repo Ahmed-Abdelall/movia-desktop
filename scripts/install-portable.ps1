@@ -5,7 +5,7 @@ param(
     [switch]$DesktopShortcut,
     [switch]$WidgetShortcut,
     [switch]$NoLaunch,
-    [string]$ExpectedExecutableHash = 'B6DE4F2B16E4B6C98D94DA576E7E66143EC3FA0DE72A8844AD13118B85B2183D'
+    [string]$ExpectedExecutableHash = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,6 +26,7 @@ $stageRoot = Join-Path $env:LOCALAPPDATA ('Movia\Deployment\stage-' + [Guid]::Ne
 $backupRoot = Join-Path $env:LOCALAPPDATA ('Movia\Deployment\backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 $sourceRoot = $null
 $movedOld = $false
+$manifestVerified = $false
 
 function Get-AppRoot([string]$root) {
     $direct = Join-Path $root 'movia_desktop.exe'
@@ -41,7 +42,7 @@ function Get-AppRoot([string]$root) {
 
 function Test-PackageManifest([string]$root) {
     $manifest = Join-Path $root 'SHA256SUMS.txt'
-    if (!(Test-Path -LiteralPath $manifest -PathType Leaf)) { return }
+    if (!(Test-Path -LiteralPath $manifest -PathType Leaf)) { return $false }
     foreach ($line in Get-Content -LiteralPath $manifest) {
         if ([string]::IsNullOrWhiteSpace($line)) { continue }
         $match = [regex]::Match($line, '^([A-Fa-f0-9]{64})\s+\*(.+)$')
@@ -56,6 +57,7 @@ function Test-PackageManifest([string]$root) {
         $actual = (Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash
         if ($actual -ine $match.Groups[1].Value) { throw "Package checksum mismatch: $relative" }
     }
+    return $true
 }
 
 function Stop-Movia {
@@ -86,11 +88,11 @@ try {
     New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
     if ([IO.Path]::GetExtension($Source) -ieq '.zip') {
         Expand-Archive -LiteralPath $Source -DestinationPath $stageRoot -Force
-        Test-PackageManifest $stageRoot
+        $manifestVerified = Test-PackageManifest $stageRoot
         $sourceRoot = Get-AppRoot $stageRoot
     } else {
         $resolved = (Resolve-Path -LiteralPath $Source).Path
-        Test-PackageManifest $resolved
+        $manifestVerified = Test-PackageManifest $resolved
         $sourceRoot = Get-AppRoot $resolved
         Copy-Item -LiteralPath $sourceRoot -Destination (Join-Path $stageRoot 'app') -Recurse
         $sourceRoot = Join-Path $stageRoot 'app'
@@ -98,7 +100,10 @@ try {
 
     $sourceExe = Join-Path $sourceRoot 'movia_desktop.exe'
     $actualHash = (Get-FileHash -LiteralPath $sourceExe -Algorithm SHA256).Hash.ToUpperInvariant()
-    if ($actualHash -ne $ExpectedExecutableHash.ToUpperInvariant()) {
+    if ([string]::IsNullOrWhiteSpace($ExpectedExecutableHash) -and !$manifestVerified) {
+        throw 'An approved executable hash is required when the source has no verified package manifest.'
+    }
+    if (![string]::IsNullOrWhiteSpace($ExpectedExecutableHash) -and $actualHash -ne $ExpectedExecutableHash.ToUpperInvariant()) {
         throw "Executable SHA-256 is not approved. Expected $ExpectedExecutableHash; received $actualHash."
     }
     foreach ($required in @('flutter_windows.dll', 'data\app.so', 'data\icudtl.dat')) {
