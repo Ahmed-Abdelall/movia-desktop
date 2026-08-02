@@ -64,12 +64,19 @@ data.
 Download the latest files from the
 [GitHub Releases page](https://github.com/Ahmed-Abdelall/movia-desktop/releases/latest):
 
-1. **Windows Installer** — run `Movia-Desktop-Setup-1.0.0.exe`.
-2. **Portable ZIP** — extract the entire ZIP and run `movia_desktop.exe`.
+1. **Portable Installed Mode (recommended on Smart App Control devices)** —
+   extract `Movia-Desktop-1.2.0-portable-installed.zip`, verify it, then run
+   `install-portable.ps1`. It installs per-user under
+   `%LOCALAPPDATA%\Programs\Movia` and preserves AppData.
+2. **Windows Installer** — for unrestricted Windows devices. The traditional
+   installer is not verified on this Smart App Control device because its
+   extracted Inno Setup process is blocked.
+3. **Standalone Portable Mode** — extract the portable ZIP anywhere and run
+   `movia_desktop.exe` directly; updates are applied manually.
 
-The installer is currently unsigned, so Windows SmartScreen may display a
-warning. Select **More info**, then **Run anyway**, if you downloaded the file
-from the official GitHub Release.
+Never disable or bypass Windows security to run Movia. Windows may authorize
+one release binary and block another; source code cannot guarantee Smart App
+Control authorization.
 
 ## Build from source
 
