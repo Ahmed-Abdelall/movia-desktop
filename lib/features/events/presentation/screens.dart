@@ -12,6 +12,7 @@ import '../../../core/localization/strings.dart';
 import '../../../core/design/movia_design.dart';
 import '../../../core/build_info.dart';
 import '../../updates/update_service.dart';
+import '../../updates/deployment_mode.dart';
 import '../../widget/widget_window.dart';
 import '../application/event_providers.dart';
 import '../domain/event.dart';
@@ -907,12 +908,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   UpdateResult result = const UpdateResult(UpdateStatus.idle);
   double progress = 0;
   bool cancelled = false;
-  bool installedBuild = false;
+  DeploymentInfo? deployment;
   @override
   void initState() {
     super.initState();
-    isInstalledBuild().then((value) {
-      if (mounted) setState(() => installedBuild = value);
+    DeploymentModeService.current().then((value) {
+      if (mounted) setState(() => deployment = value);
     });
   }
 
@@ -1059,7 +1060,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (v) => _save(settings.copyWith(automaticUpdates: v)),
           ),
           Text(_updateMessage(context, result)),
-          if (!installedBuild)
+          if (deployment?.mode == DeploymentMode.standalonePortable)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(s(context).t('portableUpdateMessage')),
@@ -1070,7 +1071,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Wrap(
               spacing: 12,
               children: [
-                if (installedBuild)
+                if (deployment?.mode != DeploymentMode.standalonePortable)
                   FilledButton(
                     onPressed: () => _download(result.release!),
                     child: Text(s(context).t('downloadInstall')),
@@ -1106,7 +1107,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             leading: const Icon(Icons.hourglass_bottom_rounded),
             title: Text('Movia Desktop'),
             subtitle: Text(
-              'Version ${BuildInfo.version} • ${BuildInfo.type}\nCommit ${BuildInfo.shortCommit}\nBuilt ${BuildInfo.timestamp}',
+              '${s(context).t('versionLabel')}: ${BuildInfo.version}\n'
+              '${s(context).t('commitLabel')}: ${BuildInfo.commit}\n'
+              '${s(context).t('deploymentLabel')}: ${_deploymentLabel(context)}\n'
+              '${s(context).t('applicationFolder')}: ${deployment?.applicationDirectory ?? s(context).t('loading')}\n'
+              '${s(context).t('dataFolder')}: ${deployment?.dataDirectory ?? s(context).t('loading')}\n'
+              '${s(context).t('builtLabel')}: ${BuildInfo.timestamp}',
             ),
           ),
           TextButton(
@@ -1141,7 +1147,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _check(SettingsState settings) async {
     setState(() => result = const UpdateResult(UpdateStatus.checking));
-    final r = await UpdateService().check();
+    final r = await UpdateService(
+      mode: deployment?.mode ?? DeploymentMode.standalonePortable,
+    ).check();
     await _save(settings.copyWith(lastUpdateCheck: DateTime.now()));
     if (mounted) setState(() => result = r);
   }
@@ -1152,7 +1160,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       () => result = UpdateResult(UpdateStatus.downloading, release: release),
     );
     try {
-      final file = await UpdateService().download(release, (a, b) {
+      final service = UpdateService(
+        mode: deployment?.mode ?? DeploymentMode.standalonePortable,
+      );
+      final file = await service.download(release, (a, b) {
         if (mounted) setState(() => progress = b == null ? 0 : a / b);
       }, cancelled: () => cancelled);
       if (!mounted) return;
@@ -1174,7 +1185,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       );
       if (ok == true) {
-        final launched = await UpdateService().launchInstaller(file);
+        final launched = deployment?.mode == DeploymentMode.portableInstalled
+            ? await service.launchPortableUpdate(file)
+            : await service.launchInstaller(file);
         if (launched) {
           exit(0);
         }
@@ -1275,6 +1288,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   String _updateMessage(BuildContext c, UpdateResult r) =>
       s(c).t('update_${r.status.name}');
+
+  String _deploymentLabel(BuildContext context) => switch (deployment?.mode) {
+    DeploymentMode.traditionalInstaller => s(context).t('traditionalInstaller'),
+    DeploymentMode.portableInstalled => s(context).t('portableInstalled'),
+    DeploymentMode.standalonePortable => s(context).t('standalonePortable'),
+    null => s(context).t('loading'),
+  };
 }
 
 Future<void> showEventEditor(BuildContext context, {MoviaEvent? event}) async =>

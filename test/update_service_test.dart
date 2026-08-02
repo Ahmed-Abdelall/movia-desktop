@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movia_desktop/features/updates/update_service.dart';
+import 'package:movia_desktop/features/updates/deployment_mode.dart';
 
 Map<String, Object?> release({
   String tag = 'v1.2.0',
@@ -10,6 +11,7 @@ Map<String, Object?> release({
   bool prerelease = false,
   bool installer = true,
   int size = 123,
+  bool portableInstalled = false,
 }) => {
   'tag_name': tag,
   'draft': draft,
@@ -22,9 +24,11 @@ Map<String, Object?> release({
   'assets': installer
       ? [
           {
-            'name': 'Movia-Desktop-Setup-${tag.substring(1)}.exe',
+            'name': portableInstalled
+                ? 'Movia-Desktop-${tag.substring(1)}-portable-installed.zip'
+                : 'Movia-Desktop-Setup-${tag.substring(1)}.exe',
             'browser_download_url':
-                'https://github.com/Ahmed-Abdelall/movia-desktop/releases/download/$tag/Movia-Desktop-Setup-${tag.substring(1)}.exe',
+                'https://github.com/Ahmed-Abdelall/movia-desktop/releases/download/$tag/${portableInstalled ? 'Movia-Desktop-${tag.substring(1)}-portable-installed.zip' : 'Movia-Desktop-Setup-${tag.substring(1)}.exe'}',
             'size': size,
           },
         ]
@@ -42,6 +46,36 @@ void main() {
       0,
     );
     expect(() => SemanticVersion.parse('1.1'), throwsFormatException);
+  });
+  test('deployment mode detects LocalAppData portable installation', () {
+    expect(
+      DeploymentModeService.detectFromPaths(
+        executable:
+            r'C:\Users\Owner\AppData\Local\Programs\Movia\movia_desktop.exe',
+        localAppData: r'C:\Users\Owner\AppData\Local',
+      ),
+      DeploymentMode.portableInstalled,
+    );
+    expect(
+      DeploymentModeService.detectFromPaths(
+        executable: r'D:\Portable\Movia\movia_desktop.exe',
+        localAppData: r'C:\Users\Owner\AppData\Local',
+      ),
+      DeploymentMode.standalonePortable,
+    );
+  });
+  test('portable installed mode selects ZIP and not installer', () {
+    final info = ReleaseInfo.fromGitHub(
+      release(tag: 'v1.3.0', portableInstalled: true),
+      SemanticVersion.parse('1.2.0'),
+      mode: DeploymentMode.portableInstalled,
+    );
+    expect(info, isNotNull);
+    expect(
+      info!.packageAsset.name,
+      'Movia-Desktop-1.3.0-portable-installed.zip',
+    );
+    expect(info.packageAsset.name, isNot(endsWith('.exe')));
   });
   test('drafts and prereleases are rejected for stable', () {
     final installed = SemanticVersion.parse('1.1.0');

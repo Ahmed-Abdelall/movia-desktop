@@ -2,7 +2,7 @@ name: Windows
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/movia-desktop-v1.2.0]
     tags: ['v*']
   pull_request:
     branches: [main]
@@ -26,7 +26,25 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build windows --release
+      - name: Build Windows release
+        shell: pwsh
+        run: |
+          $stamp = (Get-Date).ToUniversalTime().ToString('o')
+          flutter build windows --release --dart-define=MOVIA_COMMIT=${{ github.sha }} --dart-define=MOVIA_BUILD_TIME=$stamp --dart-define=MOVIA_BUILD_TYPE=release
+          Copy-Item scripts/update-portable.ps1 build/windows/x64/runner/Release/update-portable.ps1
+          @{version='1.2.0';commit='${{ github.sha }}';buildTimestamp=$stamp;buildType='release'} | ConvertTo-Json | Set-Content build/windows/x64/runner/Release/build-info.json
+      - name: Build portable artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory release/package/Movia -Force | Out-Null
+          Copy-Item build/windows/x64/runner/Release/* release/package/Movia -Recurse
+          Copy-Item scripts/install-portable.ps1,scripts/uninstall-portable.ps1,scripts/verify-package.ps1,scripts/update-portable.ps1,README-INSTALL.txt release/package
+          $root=(Resolve-Path release/package).Path
+          $lines=Get-ChildItem $root -Recurse -File | Sort-Object FullName | ForEach-Object { $relative=$_.FullName.Substring($root.Length+1).Replace('\','/'); "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash) *$relative" }
+          Set-Content release/package/SHA256SUMS.txt $lines
+          Compress-Archive release/package/* release/Movia-Desktop-1.2.0-portable-installed.zip
+          Compress-Archive build/windows/x64/runner/Release/* release/Movia-Desktop-1.2.0-portable.zip
+          foreach($file in Get-ChildItem release/*.zip){ "$((Get-FileHash $file -Algorithm SHA256).Hash) *$($file.Name)" | Set-Content "$($file.FullName).sha256" }
       - name: Install Inno Setup
         if: startsWith(github.ref, 'refs/tags/v')
         run: choco install innosetup --no-progress -y
@@ -35,11 +53,9 @@ jobs:
         shell: pwsh
         run: |
           iscc installer/movia-desktop.iss
-          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath release/Movia-Desktop-1.1.0-portable.zip
-          (Get-FileHash release/Movia-Desktop-Setup-1.1.0.exe -Algorithm SHA256).Hash.ToLower() + '  Movia-Desktop-Setup-1.1.0.exe' | Set-Content release/Movia-Desktop-Setup-1.1.0.exe.sha256
-          (Get-FileHash release/Movia-Desktop-1.1.0-portable.zip -Algorithm SHA256).Hash.ToLower() + '  Movia-Desktop-1.1.0-portable.zip' | Set-Content release/Movia-Desktop-1.1.0-portable.zip.sha256
+          (Get-FileHash release/Movia-Desktop-Setup-1.2.0.exe -Algorithm SHA256).Hash.ToLower() + '  Movia-Desktop-Setup-1.2.0.exe' | Set-Content release/Movia-Desktop-Setup-1.2.0.exe.sha256
       - uses: actions/upload-artifact@v4
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: always()
         with:
           name: movia-desktop-${{ github.ref_name }}
           path: release/*
@@ -47,7 +63,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           draft: false
-          name: Movia Desktop v1.1.0
+          name: Movia Desktop v1.2.0
           body_path: RELEASE_NOTES.md
           files: release/*
         env:

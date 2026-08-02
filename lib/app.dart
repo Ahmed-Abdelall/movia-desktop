@@ -9,6 +9,7 @@ import 'core/design/movia_design.dart';
 import 'features/events/application/event_providers.dart';
 import 'features/events/presentation/screens.dart';
 import 'features/updates/update_service.dart';
+import 'features/updates/deployment_mode.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final router = GoRouter(
@@ -108,7 +109,8 @@ class _MoviaAppState extends ConsumerState<MoviaApp> {
                 24)) {
       return;
     }
-    final result = await UpdateService().check();
+    final deployment = await DeploymentModeService.current();
+    final result = await UpdateService(mode: deployment.mode).check();
     await ref
         .read(settingsProvider.notifier)
         .updateSettings(settings.copyWith(lastUpdateCheck: DateTime.now()));

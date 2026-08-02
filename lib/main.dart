@@ -13,7 +13,7 @@ Future<void> main(List<String> args) async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
   final controller = await WindowController.fromCurrentEngine();
-  if (controller.arguments == 'movia-widget') {
+  if (args.contains('--widget') || controller.arguments == 'movia-widget') {
     await configureWidgetWindow();
     runApp(const ProviderScope(child: WidgetApp()));
     return;

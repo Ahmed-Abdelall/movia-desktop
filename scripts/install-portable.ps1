@@ -127,7 +127,10 @@ try {
 
     New-MoviaShortcut $startMenu $expectedExe '' 'Movia Desktop'
     if ($DesktopShortcut) { New-MoviaShortcut $desktop $expectedExe '' 'Movia Desktop' }
-    if ($WidgetShortcut) { New-MoviaShortcut $widget $expectedExe 'movia-widget' 'Movia Desktop Widget' }
+    New-MoviaShortcut $widget $expectedExe '--widget' 'Movia Desktop Widget'
+    if ($DesktopShortcut -and $WidgetShortcut) {
+        New-MoviaShortcut (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Movia Desktop Widget.lnk') $expectedExe '--widget' 'Movia Desktop Widget'
+    }
 
     if (!$NoLaunch) {
         $started = Start-Process -FilePath $expectedExe -WorkingDirectory $installRoot -PassThru

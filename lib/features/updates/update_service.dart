@@ -5,29 +5,13 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'deployment_mode.dart';
 
 const currentVersion = '1.2.0';
 const repositoryUrl = 'https://github.com/Ahmed-Abdelall/movia-desktop';
 const latestReleaseUrl = '$repositoryUrl/releases/latest';
 const releasesApiUrl =
     'https://api.github.com/repos/Ahmed-Abdelall/movia-desktop/releases';
-
-Future<bool> isInstalledBuild() async {
-  if (!Platform.isWindows) return false;
-  final result = await Process.run('reg.exe', [
-    'query',
-    r'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{51ED7D03-BE63-4EEC-AD43-A91B0AF8D907}_is1',
-    '/v',
-    'InstallLocation',
-  ]);
-  if (result.exitCode != 0) return false;
-  final location = RegExp(
-    r'InstallLocation\s+REG_SZ\s+(.+)',
-  ).firstMatch(result.stdout.toString())?.group(1)?.trim();
-  if (location == null) return false;
-  final installedExe = p.normalize(p.join(location, 'movia_desktop.exe'));
-  return p.equals(p.normalize(Platform.resolvedExecutable), installedExe);
-}
 
 class SemanticVersion implements Comparable<SemanticVersion> {
   const SemanticVersion(this.major, this.minor, this.patch);
@@ -64,16 +48,21 @@ class ReleaseInfo {
     required this.notes,
     required this.publishedAt,
     required this.pageUrl,
-    required this.installer,
+    required this.packageAsset,
     this.checksum,
   });
   final SemanticVersion version;
   final String title, notes, pageUrl;
   final DateTime publishedAt;
-  final ReleaseAsset installer;
+  final ReleaseAsset packageAsset;
+  ReleaseAsset get installer => packageAsset;
   final ReleaseAsset? checksum;
 
-  static ReleaseInfo? fromGitHub(Object? raw, SemanticVersion installed) {
+  static ReleaseInfo? fromGitHub(
+    Object? raw,
+    SemanticVersion installed, {
+    DeploymentMode mode = DeploymentMode.traditionalInstaller,
+  }) {
     if (raw is! Map<String, dynamic> ||
         raw['draft'] == true ||
         raw['prerelease'] == true) {
@@ -91,11 +80,13 @@ class ReleaseInfo {
           ),
         )
         .toList();
-    final expected = 'Movia-Desktop-Setup-$version.exe';
-    final installer = assets
+    final expected = mode == DeploymentMode.portableInstalled
+        ? 'Movia-Desktop-$version-portable-installed.zip'
+        : 'Movia-Desktop-Setup-$version.exe';
+    final packageAsset = assets
         .where((a) => a.name == expected && _officialAsset(a.url) && a.size > 0)
         .firstOrNull;
-    if (installer == null) return null;
+    if (packageAsset == null) return null;
     final checksum = assets
         .where(
           (a) =>
@@ -114,7 +105,7 @@ class ReleaseInfo {
       notes: raw['body'] as String? ?? '',
       publishedAt: published,
       pageUrl: page,
-      installer: installer,
+      packageAsset: packageAsset,
       checksum: checksum,
     );
   }
@@ -157,8 +148,12 @@ class UpdateResult {
 }
 
 class UpdateService {
-  UpdateService({http.Client? client}) : client = client ?? http.Client();
+  UpdateService({
+    http.Client? client,
+    this.mode = DeploymentMode.traditionalInstaller,
+  }) : client = client ?? http.Client();
   final http.Client client;
+  final DeploymentMode mode;
   Future<UpdateResult> check() async {
     try {
       final response = await client
@@ -184,7 +179,7 @@ class UpdateService {
       final installed = SemanticVersion.parse(currentVersion);
       for (final raw in decoded) {
         try {
-          final release = ReleaseInfo.fromGitHub(raw, installed);
+          final release = ReleaseInfo.fromGitHub(raw, installed, mode: mode);
           if (release != null) {
             return UpdateResult(UpdateStatus.available, release: release);
           }
@@ -214,17 +209,17 @@ class UpdateService {
     );
     await dir.create(recursive: true);
     for (final old in dir.listSync().whereType<File>().where(
-      (f) => p.basename(f.path).startsWith('Movia-Desktop-Setup-'),
+      (f) => p.basename(f.path).startsWith('Movia-Desktop-'),
     )) {
       await old.delete();
     }
-    final request = http.Request('GET', Uri.parse(release.installer.url))
+    final request = http.Request('GET', Uri.parse(release.packageAsset.url))
       ..headers['User-Agent'] = 'Movia-Desktop/1.2.0';
     final response = await client.send(request);
     if (response.statusCode != 200) {
       throw HttpException('HTTP ${response.statusCode}');
     }
-    final file = File(p.join(dir.path, release.installer.name));
+    final file = File(p.join(dir.path, release.packageAsset.name));
     final sink = file.openWrite();
     var received = 0;
     try {
@@ -254,7 +249,7 @@ class UpdateService {
       }
       final expected = _checksumFor(
         checksumResponse.body,
-        release.installer.name,
+        release.packageAsset.name,
       );
       final actual = sha256.convert(await file.readAsBytes()).toString();
       if (expected == null || expected.toLowerCase() != actual) {
@@ -274,6 +269,28 @@ class UpdateService {
     final result = await Process.start(file.path, const [
       '/SP-',
       '/CLOSEAPPLICATIONS',
+    ], mode: ProcessStartMode.detached);
+    return result.pid > 0;
+  }
+
+  Future<bool> launchPortableUpdate(File file) async {
+    if (!await file.exists() ||
+        p.extension(file.path).toLowerCase() != '.zip') {
+      return false;
+    }
+    final script = p.join(
+      p.dirname(Platform.resolvedExecutable),
+      'update-portable.ps1',
+    );
+    if (!await File(script).exists()) return false;
+    final result = await Process.start('powershell.exe', [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'RemoteSigned',
+      '-File',
+      script,
+      '-PackageZip',
+      file.path,
     ], mode: ProcessStartMode.detached);
     return result.pid > 0;
   }

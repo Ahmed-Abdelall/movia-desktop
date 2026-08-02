@@ -6,7 +6,8 @@ $shortcuts = @(
     (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Movia Desktop.lnk'),
     (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Movia Desktop Widget.lnk'),
     (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Movia Desktop.lnk'
-    )
+    ),
+    (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Movia Desktop Widget.lnk')
 )
 Get-Process -Name 'movia_desktop' -ErrorAction SilentlyContinue | ForEach-Object { [void]$_.CloseMainWindow() }
 Get-Process -Name 'movia_desktop' -ErrorAction SilentlyContinue | Wait-Process -Timeout 15 -ErrorAction SilentlyContinue
