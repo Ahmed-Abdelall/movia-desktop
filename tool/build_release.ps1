@@ -4,6 +4,7 @@ param(
   [string]$InnoSetupCompiler = ''
 )
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
 $root = Split-Path -Parent $PSScriptRoot
 $flutter = (Get-Command $FlutterCommand -ErrorAction Stop).Source
 $iscc = if ($InnoSetupCompiler) {
