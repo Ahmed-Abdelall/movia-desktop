@@ -37,6 +37,15 @@ Future<void> main(List<String> args) async {
   runApp(const ProviderScope(child: MoviaApp()));
   if ((await SharedPreferences.getInstance()).getBool('startWidgetWithMovia') ==
       true) {
-    unawaited(WidgetWindowService.open());
+    // Startup entries can run while Explorer and the desktop compositor are
+    // still settling. Let the main Flutter view render before creating the
+    // secondary engine; creating both engines in the same startup frame can
+    // crash the Windows runner during sign-in.
+    unawaited(
+      Future<void>.delayed(
+        const Duration(seconds: 2),
+        WidgetWindowService.open,
+      ),
+    );
   }
 }
