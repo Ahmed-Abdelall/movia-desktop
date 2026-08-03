@@ -3,7 +3,6 @@ param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Source,
     [switch]$DesktopShortcut,
-    [switch]$WidgetShortcut,
     [switch]$NoLaunch,
     [string]$ExpectedExecutableHash = ''
 )
@@ -21,7 +20,8 @@ $installRoot = Join-Path $env:LOCALAPPDATA 'Programs\Movia'
 $expectedExe = Join-Path $installRoot 'movia_desktop.exe'
 $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Movia Desktop.lnk'
 $desktop = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Movia Desktop.lnk'
-$widget = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Movia Desktop Widget.lnk'
+$obsoleteWidget = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Movia Desktop Widget.lnk'
+$obsoleteDesktopWidget = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Movia Desktop Widget.lnk'
 $stageRoot = Join-Path $env:LOCALAPPDATA ('Movia\Deployment\stage-' + [Guid]::NewGuid().ToString('N'))
 $backupRoot = Join-Path $env:LOCALAPPDATA ('Movia\Deployment\backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 $sourceRoot = $null
@@ -68,7 +68,7 @@ function Stop-Movia {
     if ($processes.Count -gt 0) {
         $processes | Wait-Process -Timeout 15 -ErrorAction SilentlyContinue
         $remaining = @(Get-Process -Name 'movia_desktop' -ErrorAction SilentlyContinue)
-        if ($remaining.Count -gt 0) { throw 'Movia or its widget is still running. Close it and retry.' }
+        if ($remaining.Count -gt 0) { throw 'Movia is still running. Close it and retry.' }
     }
 }
 
@@ -132,10 +132,8 @@ try {
 
     New-MoviaShortcut $startMenu $expectedExe '' 'Movia Desktop'
     if ($DesktopShortcut) { New-MoviaShortcut $desktop $expectedExe '' 'Movia Desktop' }
-    New-MoviaShortcut $widget $expectedExe '--widget' 'Movia Desktop Widget'
-    if ($DesktopShortcut -and $WidgetShortcut) {
-        New-MoviaShortcut (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Movia Desktop Widget.lnk') $expectedExe '--widget' 'Movia Desktop Widget'
-    }
+    Remove-Item -LiteralPath $obsoleteWidget,$obsoleteDesktopWidget -Force -ErrorAction SilentlyContinue
+    Remove-ItemProperty -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'Movia Desktop Widget' -ErrorAction SilentlyContinue
 
     if (!$NoLaunch) {
         $started = Start-Process -FilePath $expectedExe -WorkingDirectory $installRoot -PassThru

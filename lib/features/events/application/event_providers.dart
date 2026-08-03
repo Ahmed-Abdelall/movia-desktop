@@ -63,57 +63,27 @@ class EventsController extends AsyncNotifier<List<MoviaEvent>> {
 
 enum AppThemeMode { system, light, dark }
 
-enum WidgetStyle { compact, countdown, upcoming }
-
 class SettingsState {
   const SettingsState({
     this.theme = AppThemeMode.system,
     this.language = 'system',
-    this.widgetStyle = WidgetStyle.compact,
-    this.widgetEventId,
-    this.widgetAlwaysOnTop = true,
-    this.widgetLocked = false,
-    this.widgetOpacity = .92,
-    this.startWidgetWithMovia = false,
     this.startWithWindows = false,
     this.automaticUpdates = true,
     this.lastUpdateCheck,
   });
   final AppThemeMode theme;
   final String language;
-  final WidgetStyle widgetStyle;
-  final String? widgetEventId;
-  final bool widgetAlwaysOnTop,
-      widgetLocked,
-      startWidgetWithMovia,
-      startWithWindows,
-      automaticUpdates;
-  final double widgetOpacity;
+  final bool startWithWindows, automaticUpdates;
   final DateTime? lastUpdateCheck;
   SettingsState copyWith({
     AppThemeMode? theme,
     String? language,
-    WidgetStyle? widgetStyle,
-    String? widgetEventId,
-    bool clearWidgetEventId = false,
-    bool? widgetAlwaysOnTop,
-    bool? widgetLocked,
-    double? widgetOpacity,
-    bool? startWidgetWithMovia,
     bool? startWithWindows,
     bool? automaticUpdates,
     DateTime? lastUpdateCheck,
   }) => SettingsState(
     theme: theme ?? this.theme,
     language: language ?? this.language,
-    widgetStyle: widgetStyle ?? this.widgetStyle,
-    widgetEventId: clearWidgetEventId
-        ? null
-        : widgetEventId ?? this.widgetEventId,
-    widgetAlwaysOnTop: widgetAlwaysOnTop ?? this.widgetAlwaysOnTop,
-    widgetLocked: widgetLocked ?? this.widgetLocked,
-    widgetOpacity: widgetOpacity ?? this.widgetOpacity,
-    startWidgetWithMovia: startWidgetWithMovia ?? this.startWidgetWithMovia,
     startWithWindows: startWithWindows ?? this.startWithWindows,
     automaticUpdates: automaticUpdates ?? this.automaticUpdates,
     lastUpdateCheck: lastUpdateCheck ?? this.lastUpdateCheck,
@@ -129,17 +99,24 @@ class SettingsController extends AsyncNotifier<SettingsState> {
   @override
   Future<SettingsState> build() async {
     final prefs = await SharedPreferences.getInstance();
+    await Future.wait([
+      for (final key in const [
+        'widgetStyle',
+        'widgetEventId',
+        'widgetAlwaysOnTop',
+        'widgetLocked',
+        'widgetOpacity',
+        'startWidgetWithMovia',
+        'widgetX',
+        'widgetY',
+        'widgetWidth',
+        'widgetHeight',
+      ])
+        prefs.remove(key),
+    ]);
     return SettingsState(
       theme: AppThemeMode.values.byName(prefs.getString('theme') ?? 'system'),
       language: prefs.getString('language') ?? 'system',
-      widgetStyle: WidgetStyle.values.byName(
-        prefs.getString('widgetStyle') ?? 'compact',
-      ),
-      widgetEventId: prefs.getString('widgetEventId'),
-      widgetAlwaysOnTop: prefs.getBool('widgetAlwaysOnTop') ?? true,
-      widgetLocked: prefs.getBool('widgetLocked') ?? false,
-      widgetOpacity: prefs.getDouble('widgetOpacity') ?? .92,
-      startWidgetWithMovia: prefs.getBool('startWidgetWithMovia') ?? false,
       startWithWindows: prefs.getBool('startWithWindows') ?? false,
       automaticUpdates:
           prefs.getBool('automaticUpdates') ??
@@ -172,15 +149,6 @@ class SettingsController extends AsyncNotifier<SettingsState> {
     state = AsyncData(value);
     final p = await SharedPreferences.getInstance();
     await Future.wait([
-      p.setString('widgetStyle', value.widgetStyle.name),
-      if (value.widgetEventId == null)
-        p.remove('widgetEventId')
-      else
-        p.setString('widgetEventId', value.widgetEventId!),
-      p.setBool('widgetAlwaysOnTop', value.widgetAlwaysOnTop),
-      p.setBool('widgetLocked', value.widgetLocked),
-      p.setDouble('widgetOpacity', value.widgetOpacity),
-      p.setBool('startWidgetWithMovia', value.startWidgetWithMovia),
       p.setBool('startWithWindows', value.startWithWindows),
       p.setBool('automaticUpdates', value.automaticUpdates),
       if (value.lastUpdateCheck != null)

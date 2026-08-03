@@ -1,4 +1,4 @@
-MOVIA DESKTOP 1.2.0 - PORTABLE INSTALLED MODE
+MOVIA DESKTOP 1.2.1 - PORTABLE INSTALLED MODE
 
 This package installs Movia without running an installer executable or requiring
 administrator privileges.
@@ -7,8 +7,8 @@ administrator privileges.
 2. Open PowerShell in the extracted folder.
 3. Verify the package:
      powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\verify-package.ps1
-4. Install with Start Menu, Desktop, and widget shortcuts:
-     powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\install-portable.ps1 -Source .\Movia -DesktopShortcut -WidgetShortcut
+4. Install with Start Menu and Desktop shortcuts:
+     powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\install-portable.ps1 -Source .\Movia -DesktopShortcut
 
 Application: %LOCALAPPDATA%\Programs\Movia\movia_desktop.exe
 User data:   %APPDATA%\Ahmed Abdelaal\Movia Desktop\

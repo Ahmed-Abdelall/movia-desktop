@@ -20,7 +20,7 @@ $portableInstalledStage = Join-Path $root 'staging\portable-installed'
 if (Test-Path $staging) { Remove-Item -LiteralPath $staging -Recurse -Force }
 if (Test-Path $portableStage) { Remove-Item -LiteralPath $portableStage -Recurse -Force }
 if (Test-Path $portableInstalledStage) { Remove-Item -LiteralPath $portableInstalledStage -Recurse -Force }
-Get-ChildItem -LiteralPath $release -Filter 'Movia-Desktop-*1.2.0*' -ErrorAction SilentlyContinue | Remove-Item -Force
+Get-ChildItem -LiteralPath $release -Filter 'Movia-Desktop-*1.2.1*' -ErrorAction SilentlyContinue | Remove-Item -Force
 & $flutter clean
 & $flutter pub get
 & $flutter analyze
@@ -30,13 +30,13 @@ $built = Join-Path $root 'build\windows\x64\runner\Release'
 New-Item -ItemType Directory -Path $staging -Force | Out-Null
 Copy-Item -Path "$built\*" -Destination $staging -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $root 'scripts\update-portable.ps1') -Destination $staging -Force
-@{version='1.2.0';commit=$commit;buildTimestamp=$stamp;buildType='release'} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $staging 'build-info.json') -Encoding utf8
+@{version='1.2.1';commit=$commit;buildTimestamp=$stamp;buildType='release'} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $staging 'build-info.json') -Encoding utf8
 & $iscc (Join-Path $root 'installer\movia-desktop.iss')
 New-Item -ItemType Directory -Path $portableStage -Force | Out-Null
 Copy-Item -Path "$staging\*" -Destination $portableStage -Recurse -Force
-$zip = Join-Path $release 'Movia-Desktop-1.2.0-portable.zip'
+$zip = Join-Path $release 'Movia-Desktop-1.2.1-portable.zip'
 tar.exe -a -c -f $zip -C $portableStage .
-$portableInstalledZip = Join-Path $release 'Movia-Desktop-1.2.0-portable-installed.zip'
+$portableInstalledZip = Join-Path $release 'Movia-Desktop-1.2.1-portable-installed.zip'
 New-Item -ItemType Directory -Path (Join-Path $portableInstalledStage 'Movia') -Force | Out-Null
 Copy-Item -Path "$staging\*" -Destination (Join-Path $portableInstalledStage 'Movia') -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $root 'scripts\install-portable.ps1'),(Join-Path $root 'scripts\uninstall-portable.ps1'),(Join-Path $root 'scripts\verify-package.ps1'),(Join-Path $root 'scripts\update-portable.ps1'),(Join-Path $root 'README-INSTALL.txt') -Destination $portableInstalledStage
@@ -47,7 +47,7 @@ $lines = Get-ChildItem -LiteralPath $portableInstalledStage -Recurse -File | Sor
 }
 $lines | Set-Content -LiteralPath $manifest -Encoding ascii
 tar.exe -a -c -f $portableInstalledZip -C $portableInstalledStage .
-$installer = Join-Path $release 'Movia-Desktop-Setup-1.2.0.exe'
+$installer = Join-Path $release 'Movia-Desktop-Setup-1.2.1.exe'
 foreach ($artifact in @($installer,$zip,$portableInstalledZip)) {
   $hash=(Get-FileHash -LiteralPath $artifact -Algorithm SHA256).Hash.ToLowerInvariant()
   "$hash  $([IO.Path]::GetFileName($artifact))" | Set-Content -LiteralPath "$artifact.sha256" -Encoding ascii

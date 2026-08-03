@@ -11,9 +11,9 @@ import 'package:uuid/uuid.dart';
 import '../../../core/localization/strings.dart';
 import '../../../core/design/movia_design.dart';
 import '../../../core/build_info.dart';
+import '../../../core/windows_startup.dart';
 import '../../updates/update_service.dart';
 import '../../updates/deployment_mode.dart';
-import '../../widget/widget_window.dart';
 import '../application/event_providers.dart';
 import '../domain/event.dart';
 
@@ -213,12 +213,25 @@ class _DashboardState extends ConsumerState<DashboardScreen> {
                             width: 340,
                             child: Column(
                               children: [
-                                Expanded(child: DesktopWidgetCard(event: next)),
+                                Expanded(
+                                  flex: 3,
+                                  child: CalendarPanel(events: all),
+                                ),
                                 const SizedBox(height: 18),
-                                SummaryCard(
-                                  active: events.length,
-                                  archived: archived,
-                                  next: next,
+                                Expanded(
+                                  flex: 2,
+                                  child: SummaryCard(
+                                    active: all
+                                        .where((e) => !e.archived)
+                                        .length,
+                                    archived: archived,
+                                    thisMonth: all.where((e) {
+                                      final d = e.targetInstant.toLocal();
+                                      return d.year == now.year &&
+                                          d.month == now.month;
+                                    }).length,
+                                    next: next,
+                                  ),
                                 ),
                               ],
                             ),
@@ -350,133 +363,59 @@ class CountdownPanel extends StatelessWidget {
   }
 }
 
-class DesktopWidgetCard extends StatelessWidget {
-  const DesktopWidgetCard({super.key, this.event});
-  final MoviaEvent? event;
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.widgets_outlined, color: MoviaDesign.purple),
-              const SizedBox(width: 10),
-              Text(
-                s(context).t('desktopWidget'),
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            s(context).t('widgetSupportingText'),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF0E1426)
-                    : const Color(0xFFF0F1FF),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: MoviaDesign.purple.withValues(alpha: .2),
-                ),
-              ),
-              child: event == null
-                  ? Center(child: Text(s(context).t('addPreview')))
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.hourglass_bottom_rounded,
-                          color: MoviaDesign.purple,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          event!.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 17,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${event!.targetInstant.difference(DateTime.now()).inDays.clamp(0, 999)} ${s(context).t('daysToGo')}',
-                          style: const TextStyle(
-                            color: MoviaDesign.purple,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: WidgetWindowService.open,
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  label: Text(s(context).t('openWidget')),
-                ),
-              ),
-              const SizedBox(width: 10),
-              IconButton.filledTonal(
-                onPressed: () => context.go('/settings'),
-                icon: const Icon(Icons.tune_rounded),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 class SummaryCard extends StatelessWidget {
   const SummaryCard({
     super.key,
     required this.active,
     required this.archived,
+    required this.thisMonth,
     this.next,
   });
-  final int active, archived;
+  final int active, archived, thisMonth;
   final MoviaEvent? next;
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
       padding: const EdgeInsets.all(20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _summary(context, '$active', s(context).t('active')),
-          _summary(context, '$archived', s(context).t('archived')),
-          _summary(
-            context,
-            next == null
-                ? '—'
-                : DateFormat.MMMd(
-                    localeName(context),
-                  ).format(next!.targetInstant),
-            s(context).t('nextEvent'),
+          Text(
+            s(context).t('summary'),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: GridView.count(
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              childAspectRatio: 1.9,
+              children: [
+                _summary(context, '$active', s(context).t('active')),
+                _summary(context, '$archived', s(context).t('archived')),
+                _summary(
+                  context,
+                  '$thisMonth',
+                  s(context).t('eventsThisMonth'),
+                ),
+                _summary(
+                  context,
+                  next == null
+                      ? '—'
+                      : DateFormat.MMMd(
+                          localeName(context),
+                        ).format(next!.targetInstant),
+                  s(context).t('nextEvent'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     ),
   );
   Widget _summary(BuildContext c, String value, String label) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
     children: [
       Text(
         value,
@@ -629,22 +568,48 @@ class EventIcon extends StatelessWidget {
   );
 }
 
-class CalendarPanel extends StatelessWidget {
+class CalendarPanel extends StatefulWidget {
   const CalendarPanel({super.key, required this.events});
   final List<MoviaEvent> events;
   @override
+  State<CalendarPanel> createState() => _CalendarPanelState();
+}
+
+class _CalendarPanelState extends State<CalendarPanel> {
+  late DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
+  @override
   Widget build(BuildContext context) {
-    final now = DateTime.now(), first = DateTime(now.year, now.month, 1);
-    final count = DateTime(now.year, now.month + 1, 0).day;
+    final now = DateTime.now(), first = DateTime(month.year, month.month, 1);
+    final count = DateTime(month.year, month.month + 1, 0).day;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              DateFormat.yMMMM(localeName(context)).format(now),
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    DateFormat.yMMMM(localeName(context)).format(month),
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  tooltip: s(context).t('previousMonth'),
+                  onPressed: () => setState(
+                    () => month = DateTime(month.year, month.month - 1),
+                  ),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                IconButton(
+                  tooltip: s(context).t('nextMonth'),
+                  onPressed: () => setState(
+                    () => month = DateTime(month.year, month.month + 1),
+                  ),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             GridView.builder(
@@ -652,43 +617,61 @@ class CalendarPanel extends StatelessWidget {
               itemCount: first.weekday - 1 + count,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 7,
+                childAspectRatio: 1.25,
               ),
               itemBuilder: (_, i) {
                 if (i < first.weekday - 1) return const SizedBox();
                 final day = i - first.weekday + 2;
-                final match = events.where((e) {
+                final matches = widget.events.where((e) {
                   final d = e.targetInstant.toLocal();
-                  return d.year == now.year &&
-                      d.month == now.month &&
+                  return !e.archived &&
+                      d.year == month.year &&
+                      d.month == month.month &&
                       d.day == day;
-                }).firstOrNull;
+                }).toList();
+                final isToday =
+                    now.year == month.year &&
+                    now.month == month.month &&
+                    now.day == day;
                 return InkWell(
-                  onTap: match == null
+                  onTap: matches.isEmpty
                       ? null
-                      : () => context.push('/event/${match.externalId}'),
+                      : () =>
+                            context.push('/event/${matches.first.externalId}'),
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: match == null
-                          ? null
-                          : BoxDecoration(
-                              color: Color(
-                                match.colorArgb,
-                              ).withValues(alpha: .2),
-                              shape: BoxShape.circle,
-                            ),
-                      child: Text('$day'),
+                      decoration: BoxDecoration(
+                        color: matches.isNotEmpty
+                            ? Color(
+                                matches.first.colorArgb,
+                              ).withValues(alpha: .2)
+                            : isToday
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$day',
+                        style: TextStyle(
+                          fontWeight: isToday ? FontWeight.w800 : null,
+                        ),
+                      ),
                     ),
                   ),
                 );
               },
             ),
-            const Spacer(),
-            if (events.isEmpty)
-              EmptyState(
-                icon: Icons.calendar_today_outlined,
-                title: s(context).t('calendarEmpty'),
-                message: s(context).t('calendarMessage'),
+            const SizedBox(height: 8),
+            if (!widget.events.any((e) {
+              final d = e.targetInstant.toLocal();
+              return !e.archived &&
+                  d.year == month.year &&
+                  d.month == month.month;
+            }))
+              Text(
+                s(context).t('calendarEmpty'),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
         ),
@@ -701,9 +684,7 @@ class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final events =
-        ref.watch(eventsProvider).value?.where((e) => !e.archived).toList() ??
-        [];
+    final events = ref.watch(eventsProvider).value ?? [];
     return Padding(
       padding: const EdgeInsets.all(28),
       child: CalendarPanel(events: events),
@@ -920,9 +901,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider).value ?? const SettingsState();
-    final events =
-        ref.watch(eventsProvider).value?.where((e) => !e.archived).toList() ??
-        [];
     return ListView(
       padding: const EdgeInsets.all(28),
       children: [
@@ -966,72 +944,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onSelectionChanged: (v) =>
                 ref.read(settingsProvider.notifier).setLanguage(v.first),
           ),
-        ]),
-        section(context, 'desktopWidget', [
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              FilledButton.tonalIcon(
-                onPressed: WidgetWindowService.open,
-                icon: const Icon(Icons.open_in_new),
-                label: Text(s(context).t('openWidget')),
-              ),
-              DropdownMenu<WidgetStyle>(
-                initialSelection: settings.widgetStyle,
-                label: Text(s(context).t('widgetStyle')),
-                onSelected: (v) {
-                  if (v != null) _save(settings.copyWith(widgetStyle: v));
-                },
-                dropdownMenuEntries: WidgetStyle.values
-                    .map(
-                      (v) => DropdownMenuEntry(
-                        value: v,
-                        label: s(context).t(v.name),
-                      ),
-                    )
-                    .toList(),
-              ),
-              DropdownMenu<String>(
-                initialSelection: settings.widgetEventId,
-                label: Text(s(context).t('selectedEvent')),
-                onSelected: (v) => _save(settings.copyWith(widgetEventId: v)),
-                dropdownMenuEntries: events
-                    .map(
-                      (e) => DropdownMenuEntry(
-                        value: e.externalId,
-                        label: e.title,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
           SwitchListTile(
-            value: settings.widgetAlwaysOnTop,
-            title: Text(s(context).t('alwaysOnTop')),
-            onChanged: (v) => _save(settings.copyWith(widgetAlwaysOnTop: v)),
-          ),
-          SwitchListTile(
-            value: settings.widgetLocked,
-            title: Text(s(context).t('lockPosition')),
-            onChanged: (v) => _save(settings.copyWith(widgetLocked: v)),
-          ),
-          ListTile(
-            title: Text(s(context).t('opacity')),
-            subtitle: Slider(
-              value: settings.widgetOpacity,
-              min: .55,
-              max: 1,
-              onChanged: (v) => _save(settings.copyWith(widgetOpacity: v)),
-            ),
-          ),
-          SwitchListTile(
-            value: settings.startWidgetWithMovia,
-            title: Text(s(context).t('startWidget')),
-            onChanged: (v) => _save(settings.copyWith(startWidgetWithMovia: v)),
-          ),
-          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
             value: settings.startWithWindows,
             title: Text(s(context).t('startWindows')),
             onChanged: (v) async {
@@ -1146,7 +1060,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   );
   Future<void> _save(SettingsState s2) async {
     await ref.read(settingsProvider.notifier).updateSettings(s2);
-    await WidgetWindowService.sync();
   }
 
   Future<void> _check(SettingsState settings) async {

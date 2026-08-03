@@ -1,5 +1,5 @@
 abstract final class BuildInfo {
-  static const version = '1.2.0';
+  static const version = '1.2.1';
   static const commit = String.fromEnvironment(
     'MOVIA_COMMIT',
     defaultValue: 'development',

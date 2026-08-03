@@ -18,7 +18,7 @@ try {
     $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash
     Get-Process -Name movia_desktop -ErrorAction SilentlyContinue | Wait-Process -Timeout 30 -ErrorAction SilentlyContinue
     if (Get-Process -Name movia_desktop -ErrorAction SilentlyContinue) { throw 'Movia did not close in time.' }
-    & $install -Source $stage -ExpectedExecutableHash $hash -DesktopShortcut -WidgetShortcut
+    & $install -Source $stage -ExpectedExecutableHash $hash -DesktopShortcut
 } catch {
     Add-Type -AssemblyName PresentationFramework
     [System.Windows.MessageBox]::Show(

@@ -259,7 +259,7 @@ class AppShell extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.all(20),
                         child: Text(
-                          'Movia 1.2.0  •  ${s(context).t('windowsPlatform')}\n${s(context).t('localDataMessage')}',
+                          'Movia 1.2.1  •  ${s(context).t('windowsPlatform')}\n${s(context).t('localDataMessage')}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),

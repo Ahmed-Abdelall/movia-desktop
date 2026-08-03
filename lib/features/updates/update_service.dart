@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'deployment_mode.dart';
 
-const currentVersion = '1.2.0';
+const currentVersion = '1.2.1';
 const repositoryUrl = 'https://github.com/Ahmed-Abdelall/movia-desktop';
 const latestReleaseUrl = '$repositoryUrl/releases/latest';
 const releasesApiUrl =
@@ -162,7 +162,7 @@ class UpdateService {
             headers: const {
               'Accept': 'application/vnd.github+json',
               'X-GitHub-Api-Version': '2022-11-28',
-              'User-Agent': 'Movia-Desktop/1.2.0',
+              'User-Agent': 'Movia-Desktop/1.2.1',
             },
           )
           .timeout(const Duration(seconds: 15));
@@ -214,7 +214,7 @@ class UpdateService {
       await old.delete();
     }
     final request = http.Request('GET', Uri.parse(release.packageAsset.url))
-      ..headers['User-Agent'] = 'Movia-Desktop/1.2.0';
+      ..headers['User-Agent'] = 'Movia-Desktop/1.2.1';
     final response = await client.send(request);
     if (response.statusCode != 200) {
       throw HttpException('HTTP ${response.statusCode}');
@@ -241,7 +241,7 @@ class UpdateService {
     if (release.checksum != null) {
       final checksumResponse = await client.get(
         Uri.parse(release.checksum!.url),
-        headers: const {'User-Agent': 'Movia-Desktop/1.2.0'},
+        headers: const {'User-Agent': 'Movia-Desktop/1.2.1'},
       );
       if (checksumResponse.statusCode != 200) {
         await file.delete();

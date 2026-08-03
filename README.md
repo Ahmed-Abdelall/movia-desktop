@@ -5,7 +5,7 @@ Flutter.
 
 ![Movia icon](assets/branding/movia-icon-master.png)
 
-Current version: **1.2.0**
+Current version: **1.2.1**
 
 Movia Desktop helps you organize important moments, events, deadlines, and
 countdowns in a focused Windows interface. It is an independent desktop project;
@@ -16,9 +16,8 @@ all data stays on your computer.
 ## Features
 
 - Event creation and modification timestamps with safe schema migration
-- Compact, Countdown, and Upcoming desktop companion widget styles
 - Secure GitHub Releases update checks and SHA-256 verification
-- Dashboard and live countdown timers
+- Dashboard with live countdown, navigable calendar, and event summary
 - Calendar view and event details
 - Add, edit, and delete events
 - Archive and restore
@@ -65,7 +64,7 @@ Download the latest files from the
 [GitHub Releases page](https://github.com/Ahmed-Abdelall/movia-desktop/releases/latest):
 
 1. **Portable Installed Mode (recommended on Smart App Control devices)** —
-   extract `Movia-Desktop-1.2.0-portable-installed.zip`, verify it, then run
+   extract `Movia-Desktop-1.2.1-portable-installed.zip`, verify it, then run
    `install-portable.ps1`. It installs per-user under
    `%LOCALAPPDATA%\Programs\Movia` and preserves AppData.
 2. **Windows Installer** — for unrestricted Windows devices. The traditional

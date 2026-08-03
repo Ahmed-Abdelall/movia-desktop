@@ -16,10 +16,14 @@ flutter build windows --release
 The portable release bundle is under
 `build\windows\x64\runner\Release\`.
 
+Run `tool\build_release.ps1` to produce the v1.2.1 installer, standalone
+portable ZIP, Portable Installed ZIP, `build-info.json`, and SHA-256 sidecars.
+
 ## Installer
 
 The included Inno Setup script packages the full Release directory, creates
-Start Menu/Desktop shortcuts, and registers an uninstaller:
+main-app Start Menu/Desktop shortcuts, removes obsolete companion shortcuts and
+startup entries during upgrade, and registers an uninstaller:
 
 ```powershell
 iscc installer\movia-desktop.iss
