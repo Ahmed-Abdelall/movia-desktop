@@ -119,9 +119,9 @@ class _MoviaAppState extends ConsumerState<MoviaApp> {
     if (context != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Movia ${result.release!.version} is available.'),
+          content: Text(s(context).t('updateAvailableMessage')),
           action: SnackBarAction(
-            label: 'View',
+            label: s(context).t('view'),
             onPressed: () => router.go('/settings'),
           ),
         ),
@@ -259,7 +259,7 @@ class AppShell extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.all(20),
                         child: Text(
-                          'Movia 1.2.0  •  Windows\nData stored securely on this PC',
+                          'Movia 1.2.0  •  ${s(context).t('windowsPlatform')}\n${s(context).t('localDataMessage')}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),

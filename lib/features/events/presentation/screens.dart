@@ -365,14 +365,14 @@ class DesktopWidgetCard extends StatelessWidget {
               const Icon(Icons.widgets_outlined, color: MoviaDesign.purple),
               const SizedBox(width: 10),
               Text(
-                'Desktop Widget',
+                s(context).t('desktopWidget'),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Keep your next moment visible while you work.',
+            s(context).t('widgetSupportingText'),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -392,7 +392,7 @@ class DesktopWidgetCard extends StatelessWidget {
                 ),
               ),
               child: event == null
-                  ? const Center(child: Text('Add an event to preview'))
+                  ? Center(child: Text(s(context).t('addPreview')))
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -412,7 +412,7 @@ class DesktopWidgetCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${event!.targetInstant.difference(DateTime.now()).inDays.clamp(0, 999)} DAYS TO GO',
+                          '${event!.targetInstant.difference(DateTime.now()).inDays.clamp(0, 999)} ${s(context).t('daysToGo')}',
                           style: const TextStyle(
                             color: MoviaDesign.purple,
                             fontWeight: FontWeight.w800,
@@ -461,8 +461,8 @@ class SummaryCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _summary(context, '$active', 'Active'),
-          _summary(context, '$archived', 'Archived'),
+          _summary(context, '$active', s(context).t('active')),
+          _summary(context, '$archived', s(context).t('archived')),
           _summary(
             context,
             next == null
@@ -470,7 +470,7 @@ class SummaryCard extends StatelessWidget {
                 : DateFormat.MMMd(
                     localeName(context),
                   ).format(next!.targetInstant),
-            'Next event',
+            s(context).t('nextEvent'),
           ),
         ],
       ),
@@ -954,10 +954,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 16),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'system', label: Text('System')),
-              ButtonSegment(value: 'en', label: Text('English')),
-              ButtonSegment(value: 'ar', label: Text('العربية')),
+            segments: [
+              ButtonSegment(
+                value: 'system',
+                label: Text(s(context).t('system')),
+              ),
+              ButtonSegment(value: 'en', label: Text(s(context).t('english'))),
+              ButtonSegment(value: 'ar', label: Text(s(context).t('arabic'))),
             ],
             selected: {settings.language},
             onSelectionChanged: (v) =>
@@ -1119,6 +1122,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onPressed: () => launchUrl(Uri.parse(repositoryUrl)),
             child: const Text(repositoryUrl),
           ),
+          Text('${s(context).t('licenseLabel')}: MIT'),
         ]),
       ],
     );

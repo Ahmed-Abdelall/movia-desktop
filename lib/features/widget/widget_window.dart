@@ -329,7 +329,9 @@ class _DesktopWidgetWindowState extends ConsumerState<DesktopWidgetWindow>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text('${e.targetInstant.difference(DateTime.now()).inDays}d'),
+                Text(
+                  '${e.targetInstant.difference(DateTime.now()).inDays} ${s(context).t('days')}',
+                ),
               ],
             ),
           ),
@@ -346,7 +348,10 @@ class _DesktopWidgetWindowState extends ConsumerState<DesktopWidgetWindow>
       position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx, pos.dy),
       items: [
         for (final style in WidgetStyle.values)
-          PopupMenuItem(value: 'style:${style.name}', child: Text(style.name)),
+          PopupMenuItem(
+            value: 'style:${style.name}',
+            child: Text(s(context).t(style.name)),
+          ),
         PopupMenuItem(value: 'top', child: Text(s(context).t('alwaysOnTop'))),
         PopupMenuItem(value: 'lock', child: Text(s(context).t('lockPosition'))),
         PopupMenuItem(
